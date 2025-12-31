@@ -16,6 +16,53 @@ app.get("/", (_, res) => {
   res.json({ status: "ok", message: "Gemini backend alive" });
 });
 
+app.post("/summary", async (req, res) => {
+  try {
+    const { logPrompts, nickname } = req.body;
+
+    if (!logPrompts || !nickname) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const fullPrompt = `
+    User name: ${nickname} 
+
+                The following is the user's full story log:
+                ${logPrompts}
+        
+        Your assignment:  
+                Write a short **summary** of the user story above. Use a casual and understandable language style for young people aged 18-25.
+
+                Don't be too stiff or formal - you're Mochi, the confidante who makes people feel like they're being looked after.
+
+                Finally, add **words of encouragement** at the end of the summary, which are relevant and appropriate to the content of the user story.  
+                Don't overdo it, but keep it warm and touching.
+        
+    `;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+    });
+
+    const result = await model.generateContent(fullPrompt);
+    const text = result.response.text();
+
+     let parsed;
+     try {
+       parsed = JSON.parse(text);
+     } catch {
+       return res.status(500).json({
+         error: "Model returned invalid JSON",
+         raw: text,
+       });
+     }
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Generation failed" });
+  }
+});
+
 // Generate content endpoint
 app.post("/generate", async (req, res) => {
     try {
