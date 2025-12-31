@@ -47,15 +47,7 @@ app.post("/summary", async (req, res) => {
     const result = await model.generateContent(fullPrompt);
     const text = result.response.text();
 
-     let parsed;
-     try {
-       parsed = JSON.parse(text);
-     } catch {
-       return res.status(500).json({
-         error: "Model returned invalid JSON",
-         raw: text,
-       });
-     }
+    res.json({ text });
 
   } catch (err) {
     console.error(err);
